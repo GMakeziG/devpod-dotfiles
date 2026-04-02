@@ -24,45 +24,31 @@ install_lazygit() {
 }
 
 install_pnpm() {
-  if have pnpm; then
+  if command -v pnpm >/dev/null 2>&1; then
     echo "[*] pnpm already installed"
     return
   fi
 
-  if have corepack; then
-    echo "[*] Installing pnpm with corepack"
-    corepack enable
-    corepack prepare pnpm@latest --activate
-  else
-    echo "[*] Installing pnpm via install script"
-    curl -fsSL https://get.pnpm.io/install.sh | sh -
-    export PNPM_HOME="$HOME/.local/share/pnpm"
-    export PATH="$PNPM_HOME:$PATH"
+  echo "[*] Installing pnpm via user-local installer"
+  curl -fsSL https://get.pnpm.io/install.sh | env SHELL=/bin/bash sh -
+
+  export PNPM_HOME="$HOME/.local/share/pnpm"
+  case ":$PATH:" in
+    *":$PNPM_HOME:"*) ;;
+    *) export PATH="$PNPM_HOME:$PATH" ;;
+  esac
+
+  if ! grep -q 'PNPM_HOME' "$HOME/.bashrc" 2>/dev/null; then
+    cat >> "$HOME/.bashrc" <<'EOF'
+
+export PNPM_HOME="$HOME/.local/share/pnpm"
+case ":$PATH:" in
+  *":$PNPM_HOME:"*) ;;
+  *) export PATH="$PNPM_HOME:$PATH" ;;
+esac
+EOF
   fi
 }
-
-if have apt-get; then
-  echo "[*] Detected Debian/Ubuntu"
-  sudo apt-get update
-  sudo apt-get install -y curl git ripgrep fd-find unzip nodejs npm
-
-  if ! have fd && have fdfind; then
-    sudo ln -sf "$(command -v fdfind)" /usr/local/bin/fd
-  fi
-
-elif have dnf; then
-  echo "[*] Detected RHEL/Fedora"
-  sudo dnf install -y curl git ripgrep unzip nodejs npm
-  sudo dnf install -y fd-find || true
-
-  if ! have fd && have fdfind; then
-    sudo ln -sf "$(command -v fdfind)" /usr/local/bin/fd
-  fi
-
-else
-  echo "[!] Unsupported distro"
-  exit 1
-fi
 
 install_pnpm
 install_lazygit
