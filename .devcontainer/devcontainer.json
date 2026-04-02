@@ -1,0 +1,14 @@
+{
+  "image": "mcr.microsoft.com/devcontainers/base:debian",
+  "features": {
+    "ghcr.io/stu-bell/devcontainer-features/neovim:0": {}
+  },
+  "settings": {
+    "terminal.integrated.defaultProfile.linux": "bash",
+    "terminal.integrated.profiles.linux": {
+      "bash": {
+        "path": "/bin/bash"
+      }
+    }
+  }
+}
